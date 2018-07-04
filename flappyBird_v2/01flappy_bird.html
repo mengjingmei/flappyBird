@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            position: relative;
+            left: 500px;
+            top: 20px;
+        }
+    </style>
+</head>
+<body>
+<canvas id="cvs" width="288" height="500"></canvas>
+
+<!--引入js-->
+<script src="js/loadImage.js"></script>
+<script src="js/sky.js"></script>
+<script src="js/land.js"></script>
+<script src="js/bird.js"></script>
+<script src="js/pipe.js"></script>
+<script src="js/score.js"></script>
+<script src="js/gameScene.js"></script>
+<script src="js/overScene.js"></script>
+<!--主要js-->
+<script>
+    window.onload = function () {
+        var cvs = document.getElementById("cvs");
+        var ctx = cvs.getContext("2d");
+        //加载图片后回调主函数
+        loadImage({
+            bird: "./flappybird/bird.png",
+            bgImag: "./flappybird/bg_day.png",
+            land: "./flappybird/land.png",
+            pipeUp: "./flappybird/pipe_up.png",
+            pipeDown: "./flappybird/pipe_down.png"
+
+        },gameMain);
+
+        /**
+         * 主函数
+         */
+        function gameMain(imagObj) {
+
+            //根据背景的大小，设置画布的大小
+            ctx.width = imagObj.bgImag.width;
+            ctx.height = imagObj.bgImag.height;
+
+            //创建游戏成员对象
+            var gameMemberObj = createMember(ctx, imagObj);
+
+            //启动定时器，让画面动起来
+            var timer = setInterval(function () {
+
+                /**
+                 * 每次绘制新的游戏画面时
+                 * 先判断小鸟有没有碰撞
+                 * 如果碰撞了，暂停定时器，结束绘制
+                 */
+                    //小鸟的中心位置
+                var birdCoreX = gameMemberObj.bird.x + gameMemberObj.bird.width/2;
+                var birdCoreY = gameMemberObj.bird.y + gameMemberObj.bird.width/2;
+
+
+                //小鸟碰到了管道路径或者掉落到地上飞到天上,定时器清除，相应显示游戏结束等
+                if(    (ctx.isPointInPath(birdCoreX, birdCoreY))
+                    || (gameMemberObj.bird.y >= (ctx.height-gameMemberObj.land[0].height-gameMemberObj.bird.height/2))
+                    || ((gameMemberObj.bird.y+gameMemberObj.bird.height/2) <= 0)
+                ) {
+                    //清除定时器
+                    clearInterval(timer);
+                    //游戏结束，绘制游戏结束画面，并显示总分数
+                    gameMemberObj.overScene.draw(gameMemberObj.score.num);
+                    return;
+                }
+                else{
+
+                    for(var i=0; i<gameMemberObj.pipe.length; i++) {
+                        if((gameMemberObj.bird.x >= gameMemberObj.pipe[i].x)
+                           && (gameMemberObj.bird.x-gameMemberObj.pipe[i].speed <= gameMemberObj.pipe[i].x)) {
+                            //通过一根管道，更新分数
+                            gameMemberObj.score.update();
+                            break;
+                        }
+                    }
+
+                    //游戏开始
+                    gameScene(ctx,gameMemberObj);
+                }
+
+            },100);
+        }
+
+        /**
+         * 创建游戏中所有成员，并返回成员组合对象
+         * @param ctx
+         * @param imagObj
+         * @returns {{sky: Array, land: Array, pipe: Array, bird: Bird, overScene: OverScene}}
+         */
+        function createMember(ctx,imagObj) {
+            //创建背景和大地，两张背景图片轮播
+            var sky = [];
+            var land = [];
+            for(var i=0; i<2; i++) {
+                sky.push(createSky(ctx, imagObj));
+                land.push(createLand(ctx, imagObj));
+            }
+            //创建管道
+            var pipe = [];
+            for(var i=0; i<3; i++) {
+                pipe.push(createPipe(ctx, imagObj));
+            }
+            //创建小鸟
+            var bird = createBird(ctx, imagObj);
+            //分数
+            var score = createScore(ctx);
+            //创建游戏结束画面
+            var overScene = createOverScene(ctx);
+            //让背景动起来
+            //所有成员放入一个对象
+            var gameMemberObj = {
+                sky: sky,
+                land: land,
+                pipe: pipe,
+                bird: bird,
+                score: score,
+                overScene: overScene
+            };
+
+            return gameMemberObj;
+        }
+    }
+</script>
+</body>
+</html>

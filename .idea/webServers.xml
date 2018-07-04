@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="67cc3cdf-9dad-42a6-bc02-d94fee2e8a8f" name="localhost" url="http://192.168.123.3">
+        <fileTransfer port="0" mountedRoot="D:\file\study\studyObject\canvas" accessType="MOUNT" />
+      </webServer>
+    </option>
+  </component>
+</project>
